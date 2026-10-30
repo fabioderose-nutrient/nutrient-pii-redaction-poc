@@ -1,0 +1,19 @@
+# Local settings and secrets
+.env
+aia/.env
+keys/
+
+# Dependencies
+node_modules/
+
+# OS, editor and tool files
+.DS_Store
+.vscode/
+.idea/
+
+# Logs, archives, generated output
+*.log
+logs/
+*.zip
+*-REDACTED.pdf
+aia/license.env

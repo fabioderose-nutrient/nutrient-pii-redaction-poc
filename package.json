@@ -1,0 +1,21 @@
+{
+  "name": "nutrient-pii-redaction-poc",
+  "version": "1.0.0",
+  "description": "PII redaction PoC involving AI Assistant and an LLM by Nutrient.io",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "sample": "node scripts/make-sample.mjs",
+    "setup": "node scripts/setup.mjs",
+    "aia": "docker compose -f aia/docker-compose.yml up -d --force-recreate",
+    "wait-aia": "node scripts/wait-aia.mjs",
+    "demo": "npm run setup && npm run aia && npm run wait-aia && npm start",
+    "stop": "docker compose -f aia/docker-compose.yml down"
+  },
+  "dependencies": {
+    "@nutrient-sdk/viewer": "1.24.0",
+    "express": "^4.22.3",
+    "pdf-lib": "^1.17.1"
+  },
+  "type": "module"
+}

@@ -1,0 +1,39 @@
+# AI Assistant and its database. Values come from aia/.env, written by
+# scripts/setup.mjs from the .env file in the project folder.
+name: nutrient-pii-redaction-poc
+services:
+  ai-assistant:
+    image: pspdfkit/ai-assistant:nightly
+    env_file:
+      - path: license.env
+        required: false
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?Run npm run setup first}
+      PGUSER: db-user
+      PGPASSWORD: ${AIA_DB_PASSWORD:-change-me}
+      PGDATABASE: ai_assistant
+      PGHOST: db
+      PGPORT: 5432
+      API_AUTH_TOKEN: ${AIA_API_AUTH_TOKEN:-change-me}
+      JWT_ALGORITHM: RS256
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:?Run npm run setup first}
+      DASHBOARD_USERNAME: dashboard
+      DASHBOARD_PASSWORD: ${AIA_DASHBOARD_PASSWORD:-change-me}
+      SECRET_KEY_BASE: ${AIA_SECRET_KEY_BASE:?Run npm run setup first}
+    ports:
+      - 4100:4000
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: db-user
+      POSTGRES_PASSWORD: ${AIA_DB_PASSWORD:-change-me}
+      POSTGRES_DB: ai_assistant
+      POSTGRES_INITDB_ARGS: --data-checksums
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U db-user -d ai_assistant" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10

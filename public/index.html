@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nutrient PII Redaction PoC</title>
+  <link rel="stylesheet" href="/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">N</span>
+      <div>
+        <div class="title">Nutrient PII/PHI redaction PoC</div>
+        <div class="sub">Same sample document, two approaches. Pick the one that fits your users.</div>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="a" role="tab">A · AI Assistant <small>ready-made, human in the loop</small></button>
+      <button class="tab" data-tab="b" role="tab">B · JSON pipeline <small>building blocks, your LLM</small></button>
+    </nav>
+    <div class="doc-actions">
+      <button class="ghost" id="reset-all" title="Reload the original sample in both viewers">↺ Reset sample</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= APPROACH A ================= -->
+    <section class="pane active" id="pane-a">
+      <div class="viewer" id="viewer-a"></div>
+      <aside class="panel">
+        <div class="card">
+          <h3>Approach A — Nutrient AI Assistant</h3>
+          <p class="muted">Viewer + chat + redaction/annotation API wired together. The assistant gets the document as a structured text layer (not page images), so returned positions match the PDF.</p>
+          <div class="status" id="aia-status">Checking AI Assistant service…</div>
+        </div>
+        <div class="card">
+          <h4>1 · Ask the assistant</h4>
+          <p class="muted small">Click a prompt to copy it, then paste it in the AI Assistant chat (opens automatically).</p>
+          <div class="chips" id="aia-prompts"></div>
+          <label class="check"><input type="checkbox" id="aia-approval" /> Ask me before every write action (tool approval)</label>
+        </div>
+        <div class="card grow">
+          <h4>2 · Review the redaction jobs <span class="count" id="a-count">0</span></h4>
+          <p class="muted small">Every occurrence is a separate redaction annotation. Click to jump to it. Delete the ones you disagree with.</p>
+          <div class="list" id="a-list"><div class="empty">No redaction marked yet.</div></div>
+        </div>
+        <div class="card">
+          <h4>3 · Finalize</h4>
+          <p class="muted small">Custom “apply” button: builds the report <b>before</b> applying, removes reviewer comments/notes/highlights, applies redactions, strips metadata, then re-checks the output.</p>
+          <button class="primary" data-finalize="a">Generate report &amp; apply redactions</button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ================= APPROACH B ================= -->
+    <section class="pane" id="pane-b">
+      <div class="viewer" id="viewer-b"></div>
+      <aside class="panel">
+        <div class="card">
+          <h3>Approach B — JSON pipeline</h3>
+          <p class="muted">Web SDK extracts a JSON text structure (page → line ids → text + boxes). Your LLM returns <b>page + line id + text + category + confidence</b>, never coordinates. The SDK then searches only in that line, exact first, then fuzzy.</p>
+          <div class="steps">
+            <button id="b-extract">① Extract JSON</button>
+            <button id="b-detect" class="primary">② Detect PII (LLM on JSON)</button>
+            <button id="b-patterns">③ Patterns — no AI</button>
+            <button id="b-crosscheck">④ Regex cross-check</button>
+          </div>
+          <div class="opts">
+            <label class="check"><input type="checkbox" id="b-foi" checked /> FOI/SAR context: keep names of officials acting in official capacity</label>
+            <label class="check"><input type="checkbox" id="b-fuzzy" checked /> Fuzzy fallback (spaces, O↔0, l↔1)</label>
+          </div>
+          <div class="thresholds">
+            <label>Auto-redact ≥ <b id="t-auto-v">90</b>%<input type="range" id="t-auto" min="50" max="100" value="90" /></label>
+            <label>Send to review ≥ <b id="t-rev-v">60</b>%<input type="range" id="t-rev" min="0" max="95" value="60" /></label>
+          </div>
+          <div class="metrics" id="b-metrics"></div>
+        </div>
+        <div class="card grow">
+          <h4>Detected items by category <span class="count" id="b-count">0</span></h4>
+          <div class="legend"><span class="pill ok">auto</span><span class="pill rev">review</span><span class="pill low">ignored</span></div>
+          <div class="list" id="b-list"><div class="empty">Run ② (LLM) and/or ③ (patterns).</div></div>
+        </div>
+        <div class="card">
+          <button class="primary" data-finalize="b">Generate report &amp; apply redactions</button>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <dialog id="modal">
+    <div class="modal-head"><h3 id="modal-title"></h3><button class="ghost" id="modal-close">✕</button></div>
+    <div id="modal-body"></div>
+    <div class="modal-foot" id="modal-foot"></div>
+  </dialog>
+  <div id="toast"></div>
+
+  <script src="/vendor/nutrient-viewer.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
